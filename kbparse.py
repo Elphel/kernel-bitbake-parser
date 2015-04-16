@@ -22,6 +22,7 @@ is_def_symbol = re.compile('\s-D[\s]*([^\s\n]+)')
 is_src_path = re.compile('\s([^\s]+\/[\w]+\.c)\s')
 is_extra_include = re.compile('-include[\s]+([^\s]+\.h)[\s\n]')
 is_src_file = re.compile('.*\.c$')
+leading_project_name = re.compile('\\'+proj_dir+'\/')
 inc_receiving = 0
 inc_paths = []
 workdirs = []
@@ -113,10 +114,6 @@ print(" ╔════════════════════╗\n ║
 for i in inc_paths:
     print("<listOptionValue builtIn=\"false\" value=\"&quot;${workspace_loc:"+i+"}&quot;\"/>")
 
-print(" ╔════════════════════╗\n ║   extra includes   ║\n ╚════════════════════╝")
-for i in extraincs:
-    print(abs2wrklink(i))
-
 all_paths.sort()
 for i in range(len(all_paths)):
     try:
@@ -127,7 +124,6 @@ for i in range(len(all_paths)):
         pass
 print(" ╔════════════════════╗\n ║    source paths    ║\n ╚════════════════════╝")
 xml_src = "<entry excluding=\""
-all_paths.sort()
 for i in all_paths:
     i=i.replace(proj_dir+src_dir+"/","")
     if not is_src_file.search(i):
@@ -136,3 +132,7 @@ for i in all_paths:
     xml_src += "|"
 xml_src = xml_src[:-1]+"\" flags=\"VALUE_WORKSPACE_PATH\" kind=\"sourcePath\" name=\""+src_dir[1:]+"\"/>"
 print(xml_src)
+
+print(" ╔════════════════════╗\n ║   extra includes   ║\n ╚════════════════════╝")
+for i in extraincs:
+    print(re.sub(leading_project_name,"",abs2wrklink(i)))
