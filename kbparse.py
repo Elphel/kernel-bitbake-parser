@@ -97,18 +97,6 @@ for line in sys.stdin:
             for i in all_paths:
                 if i in srcdir:
                     all_paths.remove(i)
-print(" ╔════════════════════╗\n ║   define symbols   ║\n ╚════════════════════╝")
-xml_defs = ""
-for i in defsyms:
-    i=i.split("=")
-    xml_defs += "<listOptionValue builtIn=\"false\" value=\""+i[0]+"="
-    try:
-        xml_defs += i[1]
-    except IndexError:
-        xml_defs += "1"
-    xml_defs += "\"/>\n"
-xml_defs = xml_defs[:-1]
-print(xml_defs)
 
 print(" ╔════════════════════╗\n ║   include paths    ║\n ╚════════════════════╝")
 for i in inc_paths:
@@ -122,6 +110,20 @@ for i in range(len(all_paths)):
             all_paths.pop(i+1)
     except IndexError:
         pass
+
+print(" ╔════════════════════╗\n ║   define symbols   ║\n ╚════════════════════╝")
+xml_defs = ""
+for i in defsyms:
+    i=i.split("=")
+    xml_defs += "<listOptionValue builtIn=\"false\" value=\""+i[0]+"="
+    try:
+        xml_defs += i[1]
+    except IndexError:
+        xml_defs += "1"
+    xml_defs += "\"/>\n"
+xml_defs = xml_defs[:-1]
+print(xml_defs)
+    
 print(" ╔════════════════════╗\n ║    source paths    ║\n ╚════════════════════╝")
 xml_src = "<entry excluding=\""
 for i in all_paths:
