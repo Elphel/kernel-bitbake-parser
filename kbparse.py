@@ -19,9 +19,8 @@ is_inc_abspath = re.compile('^\s\/[^\s]*$')
 is_inc_relpath = re.compile('^\s[\w][^\s]*$')
 is_workdir = re.compile('Entering directory')
 is_def_symbol = re.compile('\s-D[\s]*([^\s\n]+)')
-is_src_path = re.compile('\s([^\s]+\/[\w]+\.c)\s')
+is_src_path = re.compile('\s([^\s]+\/[^\s]+\.c)\s')
 is_extra_include = re.compile('-include[\s]+([^\s]+\.h)[\s\n]')
-is_src_file = re.compile('.*\.c$')
 leading_project_name = re.compile('\\'+proj_dir+'\/')
 inc_receiving = 0
 inc_paths = []
@@ -48,14 +47,15 @@ for line in sys.stdin:
         line = line.split('`')[1]
         line = re.sub("[\s\'\n]","",line)
         if (line not in workdirs):
+            print(line)
             workdirs.append(line)
             workdir = line
             cmd = 'find -L '+workdir+' -type d'
             for i in os.popen(cmd):
-                i = abs2wrklink(i)[:-1]
+                i = abs2wrklink(i)[:-1]+"/"
                 if workdir not in i:
                     all_paths.append(i)
-            cmd = 'find -L '+workdir+' -path \"*.c\"'
+            cmd = 'find -L '+workdir+' -regextype sed -regex ".*\.[c]*"'
             for i in os.popen(cmd):
                 i = abs2wrklink(i)[:-1]
                 if workdir not in i:
@@ -97,20 +97,6 @@ for line in sys.stdin:
             for i in all_paths:
                 if i in srcdir:
                     all_paths.remove(i)
-
-print(" ╔════════════════════╗\n ║   include paths    ║\n ╚════════════════════╝")
-for i in inc_paths:
-    print("<listOptionValue builtIn=\"false\" value=\"&quot;${workspace_loc:"+i+"}&quot;\"/>")
-
-all_paths.sort()
-for i in range(len(all_paths)):
-    try:
-        while all_paths[i+1].startswith(all_paths[i]):
-            #print("removing "+all_paths[i+1]+" because of "+all_paths[i])
-            all_paths.pop(i+1)
-    except IndexError:
-        pass
-
 print(" ╔════════════════════╗\n ║   define symbols   ║\n ╚════════════════════╝")
 xml_defs = ""
 for i in defsyms:
@@ -123,13 +109,22 @@ for i in defsyms:
     xml_defs += "\"/>\n"
 xml_defs = xml_defs[:-1]
 print(xml_defs)
-    
+
+print(" ╔════════════════════╗\n ║   include paths    ║\n ╚════════════════════╝")
+for i in inc_paths:
+    print("<listOptionValue builtIn=\"false\" value=\"&quot;${workspace_loc:"+i+"}&quot;\"/>")
+
+all_paths.sort()
+for i in range(len(all_paths)):
+    try:
+        while all_paths[i+1].startswith(all_paths[i]):
+            all_paths.pop(i+1)
+    except IndexError:
+        pass
 print(" ╔════════════════════╗\n ║    source paths    ║\n ╚════════════════════╝")
 xml_src = "<entry excluding=\""
 for i in all_paths:
     i=i.replace(proj_dir+src_dir+"/","")
-    if not is_src_file.search(i):
-        i += "/"
     xml_src += i
     xml_src += "|"
 xml_src = xml_src[:-1]+"\" flags=\"VALUE_WORKSPACE_PATH\" kind=\"sourcePath\" name=\""+src_dir[1:]+"\"/>"
