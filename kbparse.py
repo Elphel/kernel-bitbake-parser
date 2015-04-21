@@ -97,6 +97,11 @@ for line in sys.stdin:
             for i in all_paths:
                 if i in srcdir:
                     all_paths.remove(i)
+
+print(" ╔════════════════════╗\n ║   include paths    ║\n ╚════════════════════╝")
+for i in inc_paths:
+    print("<listOptionValue builtIn=\"false\" value=\"&quot;${workspace_loc:"+i+"}&quot;\"/>")
+
 print(" ╔════════════════════╗\n ║   define symbols   ║\n ╚════════════════════╝")
 xml_defs = ""
 for i in defsyms:
@@ -110,10 +115,8 @@ for i in defsyms:
 xml_defs = xml_defs[:-1]
 print(xml_defs)
 
-print(" ╔════════════════════╗\n ║   include paths    ║\n ╚════════════════════╝")
-for i in inc_paths:
-    print("<listOptionValue builtIn=\"false\" value=\"&quot;${workspace_loc:"+i+"}&quot;\"/>")
-
+print(" ╔════════════════════╗\n ║    source paths    ║\n ╚════════════════════╝")
+xml_src = "<entry excluding=\""
 all_paths.sort()
 for i in range(len(all_paths)):
     try:
@@ -121,8 +124,6 @@ for i in range(len(all_paths)):
             all_paths.pop(i+1)
     except IndexError:
         pass
-print(" ╔════════════════════╗\n ║    source paths    ║\n ╚════════════════════╝")
-xml_src = "<entry excluding=\""
 for i in all_paths:
     i=i.replace(proj_dir+src_dir+"/","")
     xml_src += i
