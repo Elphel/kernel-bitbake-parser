@@ -13,14 +13,17 @@ wrk_link1 = proj_dir+'/linux/'
 abs_path2 = re.compile('/home.*tmp/sysroots/')
 wrk_link2 = proj_dir+'/sysroots/'
 
-is_inc_start = re.compile('^\#include\ <\.\.\.>\ search\ starts\ here\:$')
-is_inc_end = re.compile('^End\ of\ search\ list\.$')
-is_inc_abspath = re.compile('^\s\/[^\s]*$')
-is_inc_relpath = re.compile('^\s[\w][^\s]*$')
-is_workdir = re.compile('Entering directory')
-is_def_symbol = re.compile('\s-D[\s]*([^\s\n]+)')
-is_src_path = re.compile('\s([^\s]+\/[^\s]+\.c)\s')
-is_extra_include = re.compile('-include[\s]+([^\s]+\.h)[\s\n]')
+is_include_xml = re.compile("(?P<ib>\<option[^\>]*valueType=\"includePath\"\>).*?(?P<ie>\</option\>)", re.M|re.S)
+is_define_xml =  re.compile("(?P<db>\<option[^\>]*valueType=\"definedSymbols\"\>).*?(?P<de>\</option\>)", re.M|re.S)
+is_src_xml =     re.compile("(?P<sb>\<sourceEntries\>).*?(?P<se>\</sourceEntries\>)", re.M|re.S)
+is_inc_start =         re.compile('^\#include\ <\.\.\.>\ search\ starts\ here\:$')
+is_inc_end =           re.compile('^End\ of\ search\ list\.$')
+is_inc_abspath =       re.compile('^\s\/[^\s]*$')
+is_inc_relpath =       re.compile('^\s[\w][^\s]*$')
+is_workdir =           re.compile('Entering directory')
+is_def_symbol =        re.compile('\s-D[\s]*([^\s\n]+)')
+is_src_path =          re.compile('\s([^\s]+\/[^\s]+\.c)\s')
+is_extra_include =     re.compile('-include[\s]+([^\s]+\.h)[\s\n]')
 leading_project_name = re.compile('\\'+proj_dir+'\/')
 inc_receiving = 0
 inc_paths = []
@@ -98,12 +101,15 @@ for line in sys.stdin:
                 if i in srcdir:
                     all_paths.remove(i)
 
+xml_includes = ""
 print(" ╔════════════════════╗\n ║   include paths    ║\n ╚════════════════════╝")
 for i in inc_paths:
-    print("<listOptionValue builtIn=\"false\" value=\"&quot;${workspace_loc:"+i+"}&quot;\"/>")
+    xml_includes += "<listOptionValue builtIn=\"false\" value=\"&quot;${workspace_loc:"+i+"}&quot;\"/>\n"
+xml_includes = xml_includes[:-1]
+print(xml_includes)
 
 print(" ╔════════════════════╗\n ║   define symbols   ║\n ╚════════════════════╝")
-xml_defs = ""
+xml_defs = "<listOptionValue builtIn=\"false\" value=\"__GNUC__=4\"/>\n"
 for i in defsyms:
     i=i.split("=")
     xml_defs += "<listOptionValue builtIn=\"false\" value=\""+i[0]+"="
@@ -134,3 +140,16 @@ print(xml_src)
 print(" ╔════════════════════╗\n ║   extra includes   ║\n ╚════════════════════╝")
 for i in extraincs:
     print(re.sub(leading_project_name,"",abs2wrklink(i)))
+
+proj_data = ""
+with open(".cproject", "r") as old_proj_file:
+    proj_data_tmp=old_proj_file.readlines()
+    for i in proj_data_tmp:
+        proj_data = proj_data+i
+with open(".cproject_BAK","w") as new_proj_file:
+    new_proj_file.write(proj_data)
+proj_data = re.sub(is_include_xml,"\g<ib>\n"+xml_includes+"\n\g<ie>",proj_data)
+proj_data = re.sub(is_define_xml,"\g<db>\n"+xml_defs+"\n\g<de>",proj_data)
+proj_data = re.sub(is_src_xml,"\g<sb>\n"+xml_src+"\n\g<se>",proj_data)
+with open(".cproject","w") as new_proj_file:
+    new_proj_file.write(proj_data)
