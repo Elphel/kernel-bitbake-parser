@@ -123,6 +123,7 @@ print(xml_defs)
 
 print(" ╔════════════════════╗\n ║    source paths    ║\n ╚════════════════════╝")
 xml_src = "<entry excluding=\""
+all_paths.append(proj_dir+src_dir+"/scripts/")
 all_paths.sort()
 for i in range(len(all_paths)):
     try:
@@ -142,14 +143,14 @@ for i in extraincs:
     print(re.sub(leading_project_name,"",abs2wrklink(i)))
 
 proj_data = ""
-with open(".cproject", "r") as old_proj_file:
+with open(".."+proj_dir+"/.cproject", "r") as old_proj_file:
     proj_data_tmp=old_proj_file.readlines()
     for i in proj_data_tmp:
         proj_data = proj_data+i
-with open(".cproject_BAK","w") as new_proj_file:
+with open(".."+proj_dir+"/.cproject_BAK","w") as new_proj_file:
     new_proj_file.write(proj_data)
 proj_data = re.sub(is_include_xml,"\g<ib>\n"+xml_includes+"\n\g<ie>",proj_data)
 proj_data = re.sub(is_define_xml,"\g<db>\n"+xml_defs+"\n\g<de>",proj_data)
 proj_data = re.sub(is_src_xml,"\g<sb>\n"+xml_src+"\n\g<se>",proj_data)
-with open(".cproject","w") as new_proj_file:
+with open(".."+proj_dir+"/.cproject","w") as new_proj_file:
     new_proj_file.write(proj_data)
